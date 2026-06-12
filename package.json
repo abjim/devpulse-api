@@ -9,7 +9,7 @@
     "start": "node dist/server.js"
   },
   "keywords": ["express", "typescript", "postgresql", "jwt"],
-  "author": "Student Name",
+  "author": "Ahmad Abdullah Bin Wadud",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
