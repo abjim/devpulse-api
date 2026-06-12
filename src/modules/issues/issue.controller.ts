@@ -3,17 +3,18 @@ import { StatusCodes } from "http-status-codes";
 import { AuthRequest } from "../../types";
 import { sendSuccess } from "../../utils/response";
 import { AppError } from "../../middlewares/errorHandler";
-
 import {
+  parseIssueId,
   validateCreateIssue,
   validateIssueFilters,
-  parseIssueId
+  validateUpdateIssue
 } from "./issue.validation";
-
 import {
-  insertIssue,
+  deleteIssueById,
+  findIssueById,
   findIssues,
-  findIssueById
+  insertIssue,
+  updateIssueById
 } from "./issue.service";
 
 export const createIssue = async (req: AuthRequest, res: Response) => {
@@ -35,9 +36,33 @@ export const getIssues = async (req: AuthRequest, res: Response) => {
 };
 
 export const getIssue = async (req: AuthRequest, res: Response) => {
-  const issueId = parseIssueId(req.params.id);
+  const issueId = parseIssueId(req.params.id as string);
   const issue = await findIssueById(issueId);
 
   sendSuccess(res, StatusCodes.OK, "Issue retrived successfully", issue);
 };
 
+export const updateIssue = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "Authentication required");
+  }
+
+  const issueId = parseIssueId(req.params.id as string);
+  const payload = validateUpdateIssue(req.body);
+
+  const updatedIssue = await updateIssueById(
+    issueId,
+    payload,
+    req.user.id,
+    req.user.role
+  );
+
+  sendSuccess(res, StatusCodes.OK, "Issue updated successfully", updatedIssue);
+};
+
+export const deleteIssue = async (req: AuthRequest, res: Response) => {
+  const issueId = parseIssueId(req.params.id as string);
+  await deleteIssueById(issueId);
+
+  sendSuccess(res, StatusCodes.OK, "Issue deleted successfully");
+};

@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { pool } from "../../config/db";
 import { IssueRow, ReporterInfo, Role } from "../../types";
 import { AppError } from "../../middlewares/errorHandler";
-import { CreateIssueBody, IssueFilters, UpdateIssueBody} from "./issue.validation";
+import { CreateIssueBody, IssueFilters, UpdateIssueBody } from "./issue.validation";
 
 const issueFields = "id, title, description, type, status, reporter_id, created_at, updated_at";
 
@@ -25,7 +25,8 @@ const getReporterMap = async (reporterIds: number[]) => {
   const uniqueIds = [...new Set(reporterIds)];
 
   if (uniqueIds.length === 0) return map;
-  
+
+  // No JOIN is used because the assignment specifically restricted SQL JOIN.
   const users = await pool.query<ReporterInfo>(
     "SELECT id, name, role FROM users WHERE id = ANY($1::int[])",
     [uniqueIds]
@@ -34,7 +35,6 @@ const getReporterMap = async (reporterIds: number[]) => {
   users.rows.forEach((user) => map.set(user.id, user));
   return map;
 };
-
 
 const addReporterToIssues = async (issues: IssueRow[]) => {
   const reporterMap = await getReporterMap(issues.map((issue) => issue.reporter_id));
@@ -50,7 +50,6 @@ const addReporterToIssues = async (issues: IssueRow[]) => {
     updated_at: issue.updated_at
   }));
 };
-
 
 export const findIssues = async (filters: IssueFilters) => {
   const whereParts: string[] = [];
@@ -163,4 +162,9 @@ export const updateIssueById = async (
   );
 
   return result.rows[0];
+};
+
+export const deleteIssueById = async (issueId: number): Promise<void> => {
+  await findRawIssueById(issueId);
+  await pool.query("DELETE FROM issues WHERE id = $1", [issueId]);
 };

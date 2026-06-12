@@ -24,7 +24,6 @@ export interface IssueFilters {
 const issueTypes: IssueType[] = ["bug", "feature_request"];
 const statuses: IssueStatus[] = ["open", "in_progress", "resolved"];
 
-
 const parseTitle = (title: unknown): string => {
   if (typeof title !== "string" || title.trim().length === 0) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Title is required");
@@ -60,8 +59,6 @@ const parseStatus = (status: unknown): IssueStatus => {
 
   return status as IssueStatus;
 };
-
-
 
 export const validateCreateIssue = (body: Record<string, unknown>): CreateIssueBody => {
   return {
