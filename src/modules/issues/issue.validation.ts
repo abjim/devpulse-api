@@ -8,7 +8,21 @@ export interface CreateIssueBody {
   type: IssueType;
 }
 
+export interface UpdateIssueBody {
+  title?: string;
+  description?: string;
+  type?: IssueType;
+  status?: IssueStatus;
+}
+
+export interface IssueFilters {
+  sort: "newest" | "oldest";
+  type?: IssueType;
+  status?: IssueStatus;
+}
+
 const issueTypes: IssueType[] = ["bug", "feature_request"];
+const statuses: IssueStatus[] = ["open", "in_progress", "resolved"];
 
 
 const parseTitle = (title: unknown): string => {
@@ -39,10 +53,56 @@ const parseType = (type: unknown): IssueType => {
   return type as IssueType;
 };
 
+const parseStatus = (status: unknown): IssueStatus => {
+  if (!statuses.includes(status as IssueStatus)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Status must be open, in_progress, or resolved");
+  }
+
+  return status as IssueStatus;
+};
+
+
+
 export const validateCreateIssue = (body: Record<string, unknown>): CreateIssueBody => {
   return {
     title: parseTitle(body.title),
     description: parseDescription(body.description),
     type: parseType(body.type)
   };
+};
+
+export const validateUpdateIssue = (body: Record<string, unknown>): UpdateIssueBody => {
+  const payload: UpdateIssueBody = {};
+
+  if (body.title !== undefined) payload.title = parseTitle(body.title);
+  if (body.description !== undefined) payload.description = parseDescription(body.description);
+  if (body.type !== undefined) payload.type = parseType(body.type);
+  if (body.status !== undefined) payload.status = parseStatus(body.status);
+
+  if (Object.keys(payload).length === 0) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "No valid update field was provided");
+  }
+
+  return payload;
+};
+
+export const validateIssueFilters = (query: Record<string, unknown>): IssueFilters => {
+  const filters: IssueFilters = {
+    sort: query.sort === "oldest" ? "oldest" : "newest"
+  };
+
+  if (query.type !== undefined) filters.type = parseType(query.type);
+  if (query.status !== undefined) filters.status = parseStatus(query.status);
+
+  return filters;
+};
+
+export const parseIssueId = (id: string): number => {
+  const issueId = Number(id);
+
+  if (!Number.isInteger(issueId) || issueId <= 0) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid issue id");
+  }
+
+  return issueId;
 };
