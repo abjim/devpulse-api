@@ -1,4 +1,3 @@
-````md
 # DevPulse API
 
 DevPulse is a backend API for reporting bugs and feature requests inside a software team. The API supports authentication, role based permissions, issue filtering, and issue workflow updates.
